@@ -1,4 +1,4 @@
-# ---- gene_drive_plots_multi.R (updated) ----
+# ---- gene_drive_plots_multi_more.R (updated) ----
 # Usage:
 #   source("gene_drive_plots_multi.R")
 #   make_patch_figure_multi(
@@ -130,10 +130,21 @@ build_series_long <- function(base_dir, run_id, patch_id, tstart) {
     left_join(females, by = "Time") %>%
     filter_and_reindex_time(tstart = tstart)
   
-  # Long format with four groups
+  # Add Years and Total population
+  joined <- joined %>%
+    mutate(
+      Years             = Time_rel / 365,
+      `Total population` = `WT female` + `TG female` + `WT male` + `YLE male`
+    )
+  
+  # Long format with 5 groups (4 original + Total population)
   series_long <- joined %>%
-    mutate(Years = Time_rel / 365) %>%
-    dplyr::select(Years, `WT female`, `TG female`, `WT male`, `YLE male`) %>%
+    dplyr::select(
+      Years,
+      `WT female`, `TG female`,
+      `WT male`,   `YLE male`,
+      `Total population`
+    ) %>%
     pivot_longer(-Years, names_to = "group", values_to = "count")
   
   list(
@@ -143,6 +154,7 @@ build_series_long <- function(base_dir, run_id, patch_id, tstart) {
     series_long = series_long
   )
 }
+
 
 build_series_long_multi <- function(base_dir, run_ids, patch_id, tstart) {
   purrr::map_dfr(run_ids, function(rid) {
@@ -173,7 +185,8 @@ palette4 <- c(
   "WT female" = "#E69F00",
   "TG female" = "#F4C97A",
   "WT male"   = "#009E73",
-  "YLE male"  = "#0072B2"
+  "YLE male"  = "#0072B2",
+  "Total population" = "#CC79A7"   # or another contrasting colour
 )
 
 # palette4 <- c(
@@ -219,63 +232,55 @@ make_scenario_palette <- function(base_palette, amt) {
 
 # ---------- multi-scenario summary builder ----------
 # Returns:
-#   list(data_all, ci_all, pal_map)
+#   list(data_all, ci_all)
 # where:
-#   - data_all: long trajectories across scenarios (Years, group, count, run_id, scenario)
-#   - ci_all:   center/CI across runs (Years, group, center, lower, upper, scenario, series)
-#   - pal_map:  named vector mapping "series" -> hex color (group+scenario)
+#   - data_all: long trajectories for Total population across scenarios
+#               (Years, scenario, run_id, count)
+#   - ci_all:   center/CI across runs (Years, scenario, center, lower, upper)
 build_multi_scenario_ci <- function(
     base_dirs,
     labels,
     patch_id = "001",
     run_ids = NULL,
     tstart = round(8*365),
-    center = c("mean","median"),
-    groups_to_plot = NULL,
-    lighten_amts = NULL
+    center = c("mean","median")
 ) {
   center <- match.arg(center)
-  lighten_amts <- .validate_scenarios(base_dirs, labels, lighten_amts)
   
-  # Collect per-scenario long data + CI
   all_series <- list()
   all_ci     <- list()
-  pal_map    <- c()
   
   for (i in seq_along(base_dirs)) {
-    bd <- base_dirs[i]; lab <- labels[i]; amt <- lighten_amts[i]
-    # discover runs if needed
+    bd  <- base_dirs[i]
+    lab <- labels[i]
+    
     rids <- if (is.null(run_ids)) list_run_ids(bd) else run_ids
     
     ser_i <- build_series_long_multi(bd, rids, patch_id, tstart) |>
+      dplyr::filter(group == "Total population") |>
       dplyr::mutate(scenario = lab)
     
-    # optional filter on groups
-    valid_groups <- sort(unique(ser_i$group))
-    groups_use   <- .validate_groups(groups_to_plot, valid_groups)
-    ser_i <- dplyr::filter(ser_i, group %in% groups_use)
-    
-    ci_i <- summarize_center_ci(ser_i, center = center, ci = 0.95) |>
-      dplyr::mutate(scenario = lab)
-    
-    # Create a "series" key = "Group — Label" for legend/color
-    ci_i <- ci_i |>
-      dplyr::mutate(series = paste0(group, " — ", scenario))
-    
-    # palette for this scenario (lightened)
-    pal_i <- make_scenario_palette(palette4[groups_use], amt = amt)
-    names(pal_i) <- paste0(names(pal_i), " — ", lab) # when group name is in the label
-    # names(pal_i) <- paste0(lab) # when group name is NOT in the label
+    ci_i <- ser_i |>
+      dplyr::group_by(scenario, Years) |>
+      dplyr::summarise(
+        center = if (center == "mean") mean(count, na.rm = TRUE) else median(count, na.rm = TRUE),
+        lower  = stats::quantile(count, 0.025, na.rm = TRUE, type = 7),
+        upper  = stats::quantile(count, 0.975, na.rm = TRUE, type = 7),
+        .groups = "drop"
+      )
     
     all_series[[i]] <- ser_i
     all_ci[[i]]     <- ci_i
-    pal_map         <- c(pal_map, pal_i)
   }
   
+  data_all <- dplyr::bind_rows(all_series) |>
+    dplyr::mutate(scenario = factor(scenario, levels = labels))
+  ci_all   <- dplyr::bind_rows(all_ci) |>
+    dplyr::mutate(scenario = factor(scenario, levels = labels))
+  
   list(
-    data_all = dplyr::bind_rows(all_series),
-    ci_all   = dplyr::bind_rows(all_ci),
-    pal_map  = pal_map
+    data_all = data_all,
+    ci_all   = ci_all
   )
 }
 
@@ -284,6 +289,9 @@ build_multi_scenario_ci <- function(
 # Plot (center line + 95% CI)
 # -----------------------------#
 # ---- replace your make_patch_figure_multi with this version ----
+# -----------------------------#
+# Plot Total population (center line + 95% CI)
+# -----------------------------#
 make_patch_figure_multi_compare <- function(
     base_dirs,
     labels,
@@ -291,8 +299,7 @@ make_patch_figure_multi_compare <- function(
     run_ids = NULL,
     tstart = round(8*365),
     center = c("mean","median"),
-    groups_to_plot = NULL,
-    lighten_amts = NULL,        # e.g., c(0, 0.55, 0.75)
+    scenario_cols = NULL,        # user-defined colour vector, one per scenario
     outfile  = NULL,
     width    = 10,
     height   = 6,
@@ -308,22 +315,38 @@ make_patch_figure_multi_compare <- function(
   center <- match.arg(center)
   
   built <- build_multi_scenario_ci(
-    base_dirs = base_dirs, labels = labels, patch_id = patch_id,
-    run_ids = run_ids, tstart = tstart, center = center,
-    groups_to_plot = groups_to_plot, lighten_amts = lighten_amts
+    base_dirs = base_dirs,
+    labels    = labels,
+    patch_id  = patch_id,
+    run_ids   = run_ids,
+    tstart    = tstart,
+    center    = center
   )
   
   ser   <- built$data_all
   sumci <- built$ci_all
-  pal   <- built$pal_map
-  series_levels <- names(pal)
+  
+  # ----- colour handling: one colour per scenario -----
+  if (is.null(scenario_cols)) {
+    # default colour-blind friendly vector for three scenarios
+    scenario_cols <- c("#E69F00", "#009E73", "#0072B2")
+    # scenario_cols <- c("#edf8b1","#7fcdbb","#2c7fb8")
+  }
+  if (length(scenario_cols) != length(labels)) {
+    stop("Length of 'scenario_cols' must equal length of 'labels'.")
+  }
+  if (is.null(names(scenario_cols))) {
+    names(scenario_cols) <- labels
+  }
+  # ensure order follows labels
+  scenario_cols <- scenario_cols[labels]
   
   base_theme <- theme_bw(base_size = 24) +
     theme(
-      legend.position      = c(0.35, 0.98),
+      legend.position      = c(0.35, 1.00),
       legend.justification = c(0, 1),
       legend.direction     = "vertical",
-      legend.background    = element_rect(fill = alpha("white", 0.7), colour = NA),
+      legend.background    = element_rect(fill = alpha("white", 0.2), colour = NA),
       legend.title         = element_blank(),
       legend.text          = element_text(size = 24),
       axis.title           = element_text(size = 28),
@@ -334,11 +357,13 @@ make_patch_figure_multi_compare <- function(
   
   p <- ggplot()
   
+  # optional: thin per-run lines (still Total population only)
   if (show_runs) {
     p <- p +
       geom_line(
-        data = ser |> dplyr::mutate(series = paste0(group, " — ", scenario)),
-        aes(x = Years, y = count, color = series, group = interaction(run_id, group, scenario)),
+        data = ser,
+        aes(x = Years, y = count, color = scenario,
+            group = interaction(run_id, scenario)),
         linewidth = lw_runs, alpha = alpha_runs
       )
   }
@@ -346,20 +371,20 @@ make_patch_figure_multi_compare <- function(
   p <- p +
     geom_ribbon(
       data = sumci,
-      aes(x = Years, ymin = lower, ymax = upper, fill = series),
+      aes(x = Years, ymin = lower, ymax = upper, fill = scenario),
       alpha = alpha_ci, colour = NA
     ) +
     geom_line(
       data = sumci,
-      aes(x = Years, y = center, color = series),
+      aes(x = Years, y = center, color = scenario),
       linewidth = lw_mean
     ) +
     labs(
       x = "Time (years)",
-      y = if (y_log) "Abundance (log10)" else "Abundance"
+      y = if (y_log) "Total Population (log10)" else "Total Population"
     ) +
-    scale_color_manual(values = pal, limits = series_levels, breaks = series_levels) +
-    scale_fill_manual(values = pal,  limits = series_levels, breaks = series_levels) +
+    scale_color_manual(values = scenario_cols) +
+    scale_fill_manual(values  = scenario_cols) +
     base_theme
   
   # X scale / limits
@@ -387,7 +412,7 @@ make_patch_figure_multi_compare <- function(
     outfile <- file.path(
       normalizePath(getwd()),
       sprintf(
-        "FIG_compare_Patch%s_t%s_%s_%s.png",
+        "FIG_compare_TotalPop_Patch%s_t%s_%s_%s.png",
         patch_id, tstart, center,
         paste(gsub("[^A-Za-z0-9]+", "", labels), collapse = "-")
       )
@@ -396,8 +421,9 @@ make_patch_figure_multi_compare <- function(
   ggsave(outfile, p, width = width, height = height, dpi = dpi, bg = "white")
   message("Saved: ", outfile)
   
-  invisible(list(plot = p, outfile = outfile, summary_ci = sumci, palettes = pal))
+  invisible(list(plot = p, outfile = outfile, ci = sumci, scenario_cols = scenario_cols))
 }
+
 
 
 make_totals_figure_multi_compare <- function(
@@ -538,37 +564,55 @@ make_totals_figure_multi_compare <- function(
   invisible(list(plot = p, outfile = outfile, ci = ci_all))
 }
 
-
-# base_dirs <- c(
-#   "mgdriveYLE_viablity_20runs_2yr",
-#  # "mgdriveYLE_viablity_20runs_3yr",
-#   "mgdriveYLE_viablity_20runs_4yr",
-# #  "mgdriveYLE_viablity_20runs_5yr",
-#   "mgdriveYLE_viablity_20runs_6yr",
-#   "mgdriveYLE_viablity_20runs_8yr"
-#   )
-# # labels <- c("2-yr", "3-yr", "4-yr","5-yr", "6-yr", "8-yr")
-# labels <- c("2-yr", "4-yr", "6-yr", "8-yr")
-
 base_dirs <- c(
-  "mgdriveYLE_viablity_100runs_5yr_50rel",
-  "mgdriveYLE_viablity_100runs_5yr_100rel",
-  "mgdriveYLE_viablity_100runs_5yr_400rel"
+  "rel0p01_fy1p00_pq0p00_fl0p00_fs1p00_mu0p97_j0p25_c0p93",
+  "rel0p02_fy1p00_pq0p00_fl0p00_fs1p00_mu0p97_j0p25_c0p93",
+  "rel0p08_fy1p00_pq0p00_fl0p00_fs1p00_mu0p97_j0p25_c0p93"
 )
-# labels <- c("50 YLE/month", "100 YLE/month", "200 YLE/month", "400 YLE/month")
+
 labels <- c("50 YLE/month", "100 YLE/month", "400 YLE/month")
-col1 <- seq(from = 0.7, to = 0, length.out = length(base_dirs))
+
+# Okabe–Ito colour-blind-friendly, high contrast
+# scenario_cols <- c(
+#   "#E69F00",  # orange
+#   "#009E73",  # bluish green
+#   "#0072B2"   # blue
+# )
+
+
+scenario_cols <- c("#006A8EFF", "#B1283AFF", "#A8A6A7FF") # c("#BB9753FF","#061922FF","#008348FF") # c("#252525","#CC79A7","#009E73") # Green: "#009E73" # "#525252" "#252525"
+
+# c("#66c2a5","#fc8d62","#8da0cb")
+names(scenario_cols) <- labels
 
 make_patch_figure_multi_compare(
-  base_dirs = base_dirs,
-  labels    = labels,
-  patch_id  = "001",
-  tstart    = round(8*365),
-  center    = "mean",
-  tEnd     = 20,
-  groups_to_plot = c("WT female"),
-  lighten_amts   = col1 # base, lighter, lightest
+  base_dirs     = base_dirs,
+  labels        = labels,
+  patch_id      = "001",
+  tstart        = round(8*365),
+  center        = "mean",
+  tEnd          = 20,
+  scenario_cols = scenario_cols
 )
+
+
+# make_patch_figure_multi_compare(
+#   base_dirs = base_dirs,
+#   labels    = labels,
+#   patch_id  = "001",
+#   tstart    = round(8*365),
+#   center    = "mean",
+#   tEnd     = 20,
+#   groups_to_plot = c("WT female"), #c("WT female","WT male","YLE male","TG female"),
+#   lighten_amts   = col1 # base, lighter, lightest
+# )
+
+# palette4 <- c(
+#   "WT female" = "#E69F00",
+#   "TG female" = "#F4C97A",
+#   "WT male"   = "#009E73",
+#   "YLE male"  = "#0072B2"
+# )
 
 # make_totals_figure_multi_compare(
 #   base_dirs = base_dirs,

@@ -217,12 +217,14 @@ make_patch_figure_multi <- function(
     show_runs   = FALSE,        # overlay thin per-run lines
     alpha_runs  = 0.15,
     lw_runs     = 0.25,
-    groups_to_plot = NULL       # <-- NEW: e.g., c("WT female","YLE male")
+    groups_to_plot = NULL       # e.g., c("WT female","YLE male")
 ) {
+  center_name <- match.arg(center)
+  
   if (is.null(run_ids)) run_ids <- list_run_ids(base_dir)
   
   all_series <- build_series_long_multi(base_dir, run_ids, patch_id, tstart)
-  sum_ci     <- summarize_center_ci(all_series, center = center, ci = 0.95)
+  sum_ci     <- summarize_center_ci(all_series, center = center_name, ci = 0.95)
   
   # Determine which groups are available and subset
   valid_groups <- sort(unique(sum_ci$group))
@@ -272,7 +274,6 @@ make_patch_figure_multi <- function(
       linewidth = lw_mean
     ) +
     labs(
-      # title = sprintf("Patch %s — %d runs (tstart = %s days)", patch_id, length(run_ids), tstart),
       x = "Time (years)",
       y = if (y_log) "Abundance (log10)" else "Abundance"
     ) +
@@ -302,40 +303,66 @@ make_patch_figure_multi <- function(
       coord_cartesian(ylim = c(0, NA))
   }
   
+  # ---- file names ----
   if (is.null(outfile)) {
     outfile <- file.path(
       path.expand(base_dir),
       sprintf(
         "Figure_Patch%s_MULTI_t%s_%s_CI_%s.png",
-        patch_id, tstart, match.arg(center),
+        patch_id, tstart, center_name,
         paste(gsub(" ", "", groups_use), collapse = "-")
       )
     )
   }
+  summary_csv <- file.path(
+    path.expand(base_dir),
+    sprintf(
+      "Summary_Patch%s_MULTI_t%s_%s_CI_%s.csv",
+      patch_id, tstart, center_name,
+      paste(gsub(" ", "", groups_use), collapse = "-")
+    )
+  )
+  runs_csv <- file.path(
+    path.expand(base_dir),
+    sprintf(
+      "Runs_Patch%s_MULTI_t%s_%s_CI_%s.csv",
+      patch_id, tstart, center_name,
+      paste(gsub(" ", "", groups_use), collapse = "-")
+    )
+  )
   
+  # ---- save outputs ----
   ggsave(outfile, p, width = width, height = height, dpi = dpi, bg = "white")
+  readr::write_csv(sum_ci, summary_csv)
   message(sprintf("Saved figure: %s", outfile))
+  message(sprintf("Saved summary CSV: %s", summary_csv))
+  
+  if (show_runs) {
+    readr::write_csv(all_series, runs_csv)
+    message(sprintf("Saved per-run CSV: %s", runs_csv))
+  }
   
   invisible(list(
-    plot = p,
-    outfile = outfile,
-    runs = run_ids,
+    plot       = p,
+    outfile    = outfile,
+    summary_csv = summary_csv,
+    runs_csv    = if (show_runs) runs_csv else NULL,
+    runs       = run_ids,
     series_all = all_series,
     summary_ci = sum_ci,
-    groups = groups_use
+    groups     = groups_use
   ))
 }
 
 
-# 
-# outFolder <- "mgdriveYLE_nonideal_viablity_10runs_5yr_400rel"
-# base_dir <- file.path(getwd(), outFolder)
-# # source("gene_drive_plots_multi_new.R")
-# make_patch_figure_multi(
-#   base_dir = base_dir,
-#   patch_id = "001",
-#   tstart   = round(8*365),
-#   tEnd     = 20,
-#   center   = "mean",  # or "mean"
-#   groups_to_plot = c("WT female","YLE male")
-# )
+
+outFolder <- "rel0p02_fy1p00_pq0p00_fl0p00_fs1p00_mu0p97_j0p25_c0p93"
+base_dir <- file.path(getwd(), outFolder)
+make_patch_figure_multi(
+  base_dir = base_dir,
+  patch_id = "001",
+  tstart   = round(8*365),
+  tEnd     = 20,
+  center   = "mean",  # or "mean"
+  groups_to_plot = c("WT female","YLE male","WT male", "TG female")
+)
