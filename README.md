@@ -25,13 +25,24 @@ The repository is organized by Figure to facilitate the reproduction of specific
 
 The analysis is performed in **R**. The simulations rely on the `MGDrivE` framework.
 
-### 1. Install MGDrivE
-This project uses the `MGDrivE` package developed by the Marshall Lab. Please install it directly from GitHub:
+### 1. Install MGDrivE (MouseGD)
+
+This project utilizes the **MouseGD** framework, implemented within the `MGDrivE` package as described by Brown *et al.* (2022). To reproduce the simulations, please install the package directly from the source repository:
+
+**Reference:**
+
+> Brown EA, Eikenbary SR, Landis WG. Bayesian network‐based risk assessment of synthetic biology: Simulating CRISPR‐Cas9 gene drive dynamics in invasive rodent management. *Risk Analysis*. 2022 Dec;42(12):2835-46.
+
+**Installation Command:**
 
 ```r
 library(devtools)
+# Install MGDrivE from the specific GitHub repository
 install_github("eabrown2378/MGDrivE/MGDrivE")
 ```
+
+## License
+This project is released under the GPL-3.0 License and may be modified or extended as needed. See the LICENSE terms for details.
 
 ## 📧 Contact
 
