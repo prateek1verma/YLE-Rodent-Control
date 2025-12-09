@@ -3,7 +3,7 @@
 # ============================
 rm(list = ls()); gc()
 suppressPackageStartupMessages({
-  library(MGDrivEmouse)
+  library(MGDrivE)
   library(tidyverse)
   library(lhs)
   library(progressr)
@@ -59,7 +59,7 @@ bounds <- tribble(
 )
 
 
-n_sets <- 10   # LHS parameter sets (EDIT)
+n_sets <- 10000   # LHS parameter sets (EDIT)
 set.seed(2025)
 
 lhs_raw <- randomLHS(n_sets, nrow(bounds))

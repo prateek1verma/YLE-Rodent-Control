@@ -3,15 +3,17 @@
 ####################
 rm(list = ls()); gc(); save.image()   # overwrite .RData with empty workspace
 suppressPackageStartupMessages({
-  library(MGDrivEmouse)
+  library(MGDrivE)
   library(BBmisc)
   library(parallel)
+  library(pbapply)   
+  library(pbmcapply)
 })
 
 ####################
 # Top-level output
 ####################
-outFolder <- "mgdrivefRIDL_sweep"
+outFolder <- "mgdriveYLE_sweep_10yr_release_target_fertility_partial_insuff"
 if (dir.exists(outFolder)) {
   unlink(outFolder, recursive = TRUE, force = TRUE)
   cat("Folder deleted:", outFolder, "\n")
@@ -19,13 +21,12 @@ if (dir.exists(outFolder)) {
 dir.create(outFolder, recursive = TRUE, showWarnings = FALSE)
 cat("New folder created:", outFolder, "\n")
 
-####################
+############################
 # Simulation horizon & reps
-####################
-tMax  <- 50 * 365       # days
-# nRep is 100 for figure 4a,b,c (Heatmap)
-nRep  <- 10     # Monte Carlo iterations per parameter set
-tstart <- 8*365          # release start (days since 0)
+############################
+tMax  <- 58 * 365       # days
+nRep  <- 100            # Monte Carlo iterations per parameter set
+tstart <- 8 * 365       # rlease start (days since 0)
 
 ####################
 # Biology & demography
@@ -44,19 +45,22 @@ batchMigration <- basicBatchMigration(batchProbs = 0, sexProbs = c(.5, .5), numP
 ####################
 # Parameter grids
 ####################
-# Release proportion of ADULT MALES: 1%..10%
-rel_grid   <- seq(0.01, 0.40, by = 0.04)
-
+# Release proportion of ADULT MALES: 1%..20%
+rel_grid   <- seq(0.01, 0.20, by = 0.01)
 # Fitness of y-males (fy): set what you want here
 fy_grid <- seq(0.1, 1, by = 0.1) # c(1.00, 0.80, 0.60, 0.40, 0.2, 0.1)   # example; 1=no cost, <1 reduces fitness
+pq_grid <- 0
+fl_grid    <- 0
+fs_grid    <- 1
+# Constants for cube but INCLUDED in folder names (change if desired)
+mu_val <- 0.97
+j_val  <- 0.25
+c_val  <- 0.93
 
-# Female lethality flag
-fl_grid    <- c(1)
-fl <- fl_grid
 ####################
 # Source inheritance cube
 ####################
-source("generate_fRIDL_inheritance_cube.R")
+source("generate_YLE_inheritance_cube.R")
 
 ####################
 # Toxicology (kept from your script)
@@ -73,26 +77,38 @@ toxTime   <- c(10^6)  # effectively absent
 # -- helper to make "0.10" -> "p10" etc.
 num_tag <- function(x) gsub("\\.", "p", formatC(x, format = "f", digits = 2))
 
-# build folder tag
-build_tag <- function(rel, fy) {
+build_tag <- function(rel, fy, pq, fl, fs, mu, j, c) {
   paste0(
     "rel", num_tag(rel),
-    "_fy", num_tag(fy)
+    "_fy", num_tag(fy),
+    "_pq", num_tag(pq),
+    "_fl", num_tag(fl),
+    "_fs", num_tag(fs),
+    "_mu", num_tag(mu),
+    "_j",  num_tag(j),
+    "_c",  num_tag(c)
   )
 }
 
-run_param_set <- function(rel_prop, fy) {
+
+run_param_set <- function(rel_prop, fy, pq, fl, fs) {
   # ===== inheritance cube for this param-set =====
-  fy_val <- calcOmega(mu = bioParameters$muAd, lifespanReduction = fy)
-  alleleFitness_vec <- c(W = 1, H = fy_val, Y=1, X=1)
-  cube <<- generate_fRIDL_inheritance_cube(
-    female_lethality = fl, alleleFitness = alleleFitness_vec
+  alleleFitness_vec <- c(W = 1, H = 1, R = 1, Y = 1, X = 1, y = fy)
+  cube <<- generate_YLE_inheritance_cube(
+    c = c_val, j = j_val, mu = mu_val, p = pq, q = pq,
+    female_lethality = fl,
+    female_sterility = fs,
+    Haploinsufficient = FALSE,
+    muAd = 1/690,
+    alleleFitness = alleleFitness_vec
   )
+  cube$s["fXHW"] <- 0.5 # Partial haploinsufficient
+  # cube$tau[,,"fXHW"] <- 0.5 # Partial haploinsufficient
   
   # ===== releases (adult males; rel_prop of total adult pop × 0.5) =====
   releasesParameters_SP <- list(
     releasesStart    = tstart,
-    releasesNumber   = 120,
+    releasesNumber   = round(12*10),
     releasesInterval = 30,
     releaseProportion= round(cap * rel_prop * 0.5)
   )
@@ -114,8 +130,8 @@ run_param_set <- function(rel_prop, fy) {
     AdPopRatio_F = matrix(c(0, 1), 1, 2, dimnames = list(NULL, c("mYWW", "fXWW")))
   )
   
-  # ===== folders: mgdrivefRIDL_sweep/<tag>/<rep> =====
-  tag <- build_tag(rel_prop, fy)
+  # ===== folders: mgdriveYLE_sweep/<tag>/<rep> =====
+  tag <- build_tag(rel_prop, fy, pq, fl, fs, mu_val, j_val, c_val)
   param_dir <- file.path(outFolder, tag)
   
   # clean & recreate the param-set folder so only fresh results live there
@@ -169,8 +185,12 @@ run_param_set <- function(rel_prop, fy) {
 ####################
 param_grid <- expand.grid(
   rel = rel_grid,
-  fy = fy_grid,
-  KEEP.OUT.ATTRS = FALSE, stringsAsFactors = FALSE
+  fy  = fy_grid,
+  pq  = pq_grid,
+  fl  = fl_grid,
+  fs  = fs_grid,
+  KEEP.OUT.ATTRS = FALSE,
+  stringsAsFactors = FALSE
 )
 
 cat("Total parameter sets:", nrow(param_grid), "\n")
@@ -179,24 +199,26 @@ cat("Total parameter sets:", nrow(param_grid), "\n")
 # Run (parallel if possible)
 ####################
 is_windows <- identical(.Platform$OS.type, "windows")
-cores <- if (is_windows) 1 else max(1L, parallel::detectCores()/4)
+cores <- if (is_windows) 1 else round(max(1L, parallel::detectCores()/4))
 
 cat("Using cores:", cores, "\n")
 
 if (cores > 1) {
-  # Unix / macOS parallel (forks). Windows will fall back to sequential.
-  invisible(mclapply(
+  invisible(pbmclapply(
     X = seq_len(nrow(param_grid)),
     FUN = function(ii) {
-      with(param_grid[ii, ], run_param_set(rel, fy))
+      with(param_grid[ii, ], run_param_set(rel, fy, pq, fl, fs))
     },
     mc.cores = cores
   ))
 } else {
-  # Sequential
-  for (ii in seq_len(nrow(param_grid))) {
-    with(param_grid[ii, ], run_param_set(rel, fy))
-  }
+  invisible(pblapply(
+    X = seq_len(nrow(param_grid)),
+    FUN = function(ii) {
+      with(param_grid[ii, ], run_param_set(rel, fy, pq, fl, fs))
+    }
+  ))
 }
+
 
 cat("All simulations completed. Output root:", normalizePath(outFolder), "\n")

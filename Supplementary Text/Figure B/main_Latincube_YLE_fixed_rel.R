@@ -3,7 +3,7 @@
 # ============================
 rm(list = ls()); gc()
 suppressPackageStartupMessages({
-  library(MGDrivEmouse)
+  library(MGDrivE)
   library(tidyverse)
   library(lhs)
   library(progressr)
@@ -47,7 +47,7 @@ source("generate_YLE_inheritance_cube.R")
 # Define bounds (EDIT these to your study ranges)
 bounds <- tribble(
   ~param, ~low,  ~high, ~scale, ~type,
-  "rel",   0.05,  0.05,  "lin",  "cont",   # release proportion of adult males
+  "rel",   0.03,  0.03,  "lin",  "cont",   # release proportion of adult males
   "fy",    0.20,  1.00,  "lin",  "cont",   # relative fitness of Y-males
   "p",     0.00,  0.20,  "lin",  "cont",   # NHEJ parameter p
   "q",     0.00,  0.20,  "lin",  "cont",   # NHEJ parameter q
@@ -59,7 +59,7 @@ bounds <- tribble(
 )
 
 
-n_sets <- 4   # LHS parameter sets (EDIT)
+n_sets <- 10000   # LHS parameter sets (EDIT)
 set.seed(2025)
 
 lhs_raw <- randomLHS(n_sets, nrow(bounds))
@@ -86,7 +86,7 @@ param_sets <- map2_dfc(
 # param_sets$pq <- 0
 # param_sets$c <- 1
 # param_sets$mu <- 1
-param_sets$rel <- 0.05
+param_sets$rel <- 0.03
 
 # ---------- tagging helpers ----------
 num_tag <- function(x) gsub("\\.", "p", formatC(x, format = "f", digits = 4))
