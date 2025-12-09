@@ -41,7 +41,7 @@ library(devtools)
 install_github("eabrown2378/MGDrivE/MGDrivE")
 ```
 
-## License
+## 📄 License
 This project is released under the GPL-3.0 License and may be modified or extended as needed. See the LICENSE terms for details.
 
 ## 📧 Contact
