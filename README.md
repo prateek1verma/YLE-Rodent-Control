@@ -7,23 +7,23 @@
 
 This repository contains the source code, simulation scripts, and data analysis workflows for the research paper *"Y-linked editors for invasive rodent control: A mathematical modeling study"*.
 
-In this study, we evaluate the potential of **Y-linked genome editors (YLEs)**—a self-limiting genetic biocontrol strategy—to suppress or eliminate invasive mouse populations. We benchmark YLEs against other self-limiting genetic biocontrol tools (such as sterile male releases) and self-sustaining tools (such as Homing Gene Drives and Y-linked X-shredders) using the **MouseGD** stochastic simulation framework.
+In this study, we evaluate the potential of **Y-linked genome editors (YLEs)**—a self-limiting genetic biocontrol strategy—to suppress or eliminate invasive mouse populations. We benchmark YLEs against other self-limiting genetic biocontrol tools (such as sterile male releases (SMR), fsRRDL) and self-sustaining tools (such as Homing Gene Drives and Y-linked X-shredders) using the **MouseGD** stochastic simulation framework.
 
 ## 📂 Repository Structure
 
 The repository is organized by Figure to facilitate the reproduction of specific results found in the manuscript:
 
 * **`Figure1/`**: Parameter sweeps and plots for fertility-targeting YLE scenarios.
-* **`Figure2/`**: Sensitivity analyses varying key release and fitness parameters.
+* **`Figure2/`**: Sensitivity analyses varying release size and fitness parameters.
 * **`Figure3/`**: Comparisons of haplosufficient vs. partially haploinsufficient target effects.
-* **`Figure4/`**: Alternative drive architectures including fRIDL and fsRDDL.
+* **`Figure4/`**: Alternative self-limiting genetic control strategies including fsRRDL and SMR.
 * **`Figure5/`**: Multi-patch releases contrasting YLE containment with Homing and X-shredder invasion.
 * **`Figure6/`**: Analysis of breeding facility requirements and graphical abstract assets.
-* **`Supplementary Text/`**: Extended sensitivity analyses and Boosted Regression Tree (BRT) models (Figures A–H).
+* **`Supplementary Text/`**: Extended sensitivity analyses for YLE targeting female specific viability gene, Boosted Regression Tree (BRT) models, varying carrying capacity etc. (Figures A–H).
 
 ## 🛠️ Installation & Prerequisites
 
-The analysis is performed in **R**. The simulations rely on the `MGDrivE` framework.
+The analysis is performed in **R**. The simulations rely on the `MouseGD` framework which is an adapted version of `MGDrivE` but for mouse.
 
 ### 1. Install MGDrivE (MouseGD)
 
