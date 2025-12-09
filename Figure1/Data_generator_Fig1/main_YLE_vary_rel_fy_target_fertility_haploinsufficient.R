@@ -3,7 +3,7 @@
 ####################
 rm(list = ls()); gc(); save.image()   # overwrite .RData with empty workspace
 suppressPackageStartupMessages({
-  library(MGDrivEmouse)
+  library(MGDrivE) # This is from MouseGD package and not the MGDriVE for mosquitoes.
   library(BBmisc)
   library(parallel)
   library(pbapply)   
