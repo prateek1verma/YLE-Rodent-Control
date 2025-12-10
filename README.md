@@ -34,21 +34,13 @@ The repository is organized by Figure to facilitate the reproduction of specific
 
 Simulation outputs are organized in subdirectories to make it easier to re-run parameter sweeps and regenerate published figures. Generated data files already present in the repository can be reused to avoid long runtimes.
 
-## 🛠️ Details of Installation of MGDrivE (MouseGD)
+## 📚 Reference to MGDrivE (MouseGD)
 
-The analysis is performed in **R**. The simulations rely on the `MouseGD` framework which is an adapted version of `MGDrivE` but for mouse. The deatails of this package is described in Brown *et al.* (2022). To reproduce the simulations, please install the package directly from the source repository:
+The simulations rely on the `MouseGD` framework which is an adapted version of `MGDrivE` but for mouse. The details of this package is described in Brown *et al.* (2022). To reproduce the simulations, please install the package directly from the source repository:
 
 **Reference:**
 
 > Brown EA, Eikenbary SR, Landis WG. Bayesian network‐based risk assessment of synthetic biology: Simulating CRISPR‐Cas9 gene drive dynamics in invasive rodent management. *Risk Analysis*. 2022 Dec;42(12):2835-46.
-
-**Installation Command:**
-
-```r
-library(devtools)
-# Install MGDrivE from the specific GitHub repository
-install_github("eabrown2378/MGDrivE/MGDrivE")
-```
 
 ## 📄 License
 This project is released under the GPL-3.0 License and may be modified or extended as needed. See the LICENSE terms for details.
