@@ -18,7 +18,7 @@ The repository is organized by Figure to facilitate the reproduction of specific
 * **`Figure3/`**: Comparisons of haplosufficient vs. partially haploinsufficient target effects.
 * **`Figure4/`**: Alternative self-limiting genetic control strategies including fsRRDL and SMR.
 * **`Figure5/`**: Multi-patch releases contrasting YLE containment with Homing and X-shredder invasion.
-* **`Figure6/`**: Schematic illustration of life-history parameters of a mouse in MouseGD framework and parameters related to genetic inheritance of a YLE construct.
+* **`Figure6/`**: Schematic of mouse life-history parameters and YLE inheritance dynamics in the MouseGD framework.
 * **`Supplementary Text/`**: Extended sensitivity analyses for YLE targeting female specific viability gene, Boosted Regression Tree (BRT) models, varying carrying capacity etc. (Figures A–H).
 
 ## 🛠️ Installation & Prerequisites
