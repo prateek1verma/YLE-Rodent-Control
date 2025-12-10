@@ -21,13 +21,22 @@ The repository is organized by Figure to facilitate the reproduction of specific
 * **`Figure6/`**: Schematic of mouse life-history parameters and YLE inheritance dynamics in the MouseGD framework.
 * **`Supplementary Text/`**: Extended sensitivity analyses for YLE targeting female specific viability gene, Boosted Regression Tree (BRT) models, varying carrying capacity etc. (Figures A–H).
 
-## 🛠️ Installation & Prerequisites
+## 🚀 Getting started
+1. Install R (4.0 or later) with development tools.
+2. Install dependencies, including the MouseGD implementation of MGDrivE:
+   ```r
+   install.packages("devtools")
+   library(devtools)
+   install_github("eabrown2378/MGDrivE/MGDrivE")
+   ```
+3. Clone this repository and navigate to the figure of interest.
+4. Follow the folder-specific README to run data-generation scripts and plotting routines.
 
-The analysis is performed in **R**. The simulations rely on the `MouseGD` framework which is an adapted version of `MGDrivE` but for mouse.
+Simulation outputs are organized in subdirectories to make it easier to re-run parameter sweeps and regenerate published figures. Generated data files already present in the repository can be reused to avoid long runtimes.
 
-### 1. Install MGDrivE (MouseGD)
+## 🛠️ Details of Installation of MGDrivE (MouseGD)
 
-This project utilizes the **MouseGD** framework, implemented within the `MGDrivE` package as described by Brown *et al.* (2022). To reproduce the simulations, please install the package directly from the source repository:
+The analysis is performed in **R**. The simulations rely on the `MouseGD` framework which is an adapted version of `MGDrivE` but for mouse. The deatails of this package is described in Brown *et al.* (2022). To reproduce the simulations, please install the package directly from the source repository:
 
 **Reference:**
 
