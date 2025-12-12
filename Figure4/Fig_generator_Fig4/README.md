@@ -3,6 +3,7 @@
 Plotting scripts for Figure 4 panels.
 
 ## Key scripts
+- `Fig4abc.R` – Generates panel a, b and c.
 - `Fig4d.R` – Generates panel d.
 - `Fig4e.R` – Generates panel e.
 
