@@ -13,7 +13,7 @@ suppressPackageStartupMessages({
 ####################
 # Top-level output
 ####################
-outFolder <- "mgdriveSIT_sweep_10yr"
+outFolder <- "mgdriveSMR_sweep_10yr"
 if (dir.exists(outFolder)) {
   unlink(outFolder, recursive = TRUE, force = TRUE)
   cat("Folder deleted:", outFolder, "\n")
@@ -68,7 +68,7 @@ c_val  <- 1.0
 # Source inheritance cube
 ####################
 # source("generate_YLE_inheritance_cube_v2.R")
-source("generate_SIT_inheritance_cube.R")
+source("generate_SMR_inheritance_cube.R")
 
 ####################
 # Toxicology (kept from your script)
@@ -101,7 +101,7 @@ build_tag <- function(rel, fy, pq, fl, mu, j, c) {
 run_param_set <- function(rel_prop, fy, pq, fl) {
   # ===== inheritance cube for this param-set =====
   fy_val <- calcOmega(mu = bioParameters$muAd, lifespanReduction = fy)
-  cube <<- generate_SIT_inheritance_cube(sterility = 1)
+  cube <<- generate_SMR_inheritance_cube(sterility = 1)
   cube$omega["my"] <<- fy_val
   
   

@@ -1,4 +1,4 @@
-generate_SIT_inheritance_cube <- function(sterility = 1) {
+generate_SMR_inheritance_cube <- function(sterility = 1) {
   
   # Genotype sets (diploid locus; sex denoted by prefix mY / fX)
   male_genotypes   <- c("mY", "my")
