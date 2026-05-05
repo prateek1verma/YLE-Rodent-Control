@@ -1,10 +1,10 @@
-# Supplementary Figure E: Carrying capacity sensitivity
+# Supplementary Figure E: fsRDDL/fRIDL comparison
 
-Simulations and plots examining the influence of carrying capacity on fertility-targeting YLE scenarios.
+Simulations and plots comparing fsRDDL and fRIDL strategies.
 
 ## Contents
-- `main_YLE_vary_K_target_fertility_haploinsufficient.R` – Runs simulations varying carrying capacity.
-- `generate_YLE_inheritance_cube.R` – Builds the inheritance cube.
-- `FigE.R` – Generates the supplementary figure (output saved as `FigE.png`).
+- `main_fsRRDL_para_sweep.R` – Executes parameter sweeps.
+- `generate_fRIDL_inheritance_cube.R` – Builds the inheritance cube for fRIDL.
+- `FigF_fsRDDL.R` – Generates the supplementary figure (output saved as `FigF.png`).
 
-Run the main script to regenerate simulations, then execute `FigE.R` to recreate the figure.
+Run the main script to regenerate simulations, then execute `FigF_fsRDDL.R` to recreate the figure.
