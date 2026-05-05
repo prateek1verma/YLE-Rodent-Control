@@ -1,10 +1,10 @@
-# Supplementary Figure G: Fertility-targeting release frequencies
+# Supplementary Figure G: Alternative fertility parameterisations
 
-Simulations and plots exploring fertility-targeting YLE scenarios with varying release frequencies and fitness costs.
+Simulations and plots for alternative fertility-targeting YLE parameter sets.
 
 ## Contents
-- `main_YLE_vary_rel_fy_target_fertility_haploinsufficient.R` – Runs the parameter sweeps for appropriate parameter specification.
-- `generate_YLE_inheritance_cube.R` – Builds the inheritance cube (defines a dependent function in the main script).
-- `FigG_YLE.R` – Generates the supplementary figure (output saved as `FigG.png`).
+- `main_YLE_vary_rel_fy_target_fertility_haploinsufficient.R` – Runs the simulations for this scenario.
+- `generate_YLE_inheritance_cube.R` – Builds the inheritance cube.
+- `FigH_plot.R` – Generates the supplementary figure (output saved as `FigG.png`).
 
-Run the main script to regenerate simulations, then execute `FigG_YLE.R` to recreate the figure.
+Run the main script to regenerate simulations, then execute `FigG_plot.R` to rebuild the figure.
