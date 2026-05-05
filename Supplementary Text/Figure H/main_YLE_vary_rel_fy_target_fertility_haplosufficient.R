@@ -13,7 +13,7 @@ suppressPackageStartupMessages({
 ####################
 # Top-level output
 ####################
-outFolder <- "mgdriveYLE_sweep_10yr_release_target_fertility"
+outFolder <- "mgdriveYLE_sweep_10yr_release_target_fertility_suff"
 if (dir.exists(outFolder)) {
   unlink(outFolder, recursive = TRUE, force = TRUE)
   cat("Folder deleted:", outFolder, "\n")
@@ -25,7 +25,7 @@ cat("New folder created:", outFolder, "\n")
 # Simulation horizon & reps
 ############################
 tMax  <- 58 * 365       # days
-nRep  <- 1            # Monte Carlo iterations per parameter set
+nRep  <- 100            # Monte Carlo iterations per parameter set
 tstart <- 8 * 365       # rlease start (days since 0)
 
 ####################
@@ -46,9 +46,9 @@ batchMigration <- basicBatchMigration(batchProbs = 0, sexProbs = c(.5, .5), numP
 # Parameter grids
 ####################
 # Release proportion of ADULT MALES: 1%..20%
-rel_grid   <- c(0.05) # seq(0.01, 0.20, by = 0.01)
+rel_grid   <- seq(0.01, 0.20, by = 0.01)
 # Fitness of y-males (fy): set what you want here
-fy_grid <- 0.8 # seq(0.1, 1, by = 0.1) # c(1.00, 0.80, 0.60, 0.40, 0.2, 0.1)   # example; 1=no cost, <1 reduces fitness
+fy_grid <- seq(0.1, 1, by = 0.1) # c(1.00, 0.80, 0.60, 0.40, 0.2, 0.1)   # example; 1=no cost, <1 reduces fitness
 pq_grid <- 0
 fl_grid    <- 0
 fs_grid    <- 1
@@ -98,7 +98,7 @@ run_param_set <- function(rel_prop, fy, pq, fl, fs) {
     c = c_val, j = j_val, mu = mu_val, p = pq, q = pq,
     female_lethality = fl,
     female_sterility = fs,
-    Haploinsufficient = TRUE,
+    Haploinsufficient = FALSE,
     muAd = 1/690,
     alleleFitness = alleleFitness_vec
   )
