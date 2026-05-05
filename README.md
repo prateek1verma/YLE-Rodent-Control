@@ -18,7 +18,8 @@ The repository is organized by Figure to facilitate the reproduction of specific
 * **`Figure3/`**: Comparisons of haplosufficient vs. partially haploinsufficient target effects.
 * **`Figure4/`**: Alternative self-limiting genetic control strategies including fsRRDL and SMR.
 * **`Figure5/`**: Multi-patch releases contrasting YLE containment with Homing and X-shredder invasion.
-* **`Figure6/`**: Schematic of mouse life-history parameters and YLE inheritance dynamics in the MouseGD framework.
+* * **`Figure5/`**: Performance and spatial dynamics of the boosted YLE system.
+* **`Figure7/`**: Schematic of mouse life-history parameters and YLE inheritance dynamics in the MouseGD framework.
 * **`Supplementary Text/`**: Extended sensitivity analyses for YLE targeting female specific viability gene, Boosted Regression Tree (BRT) models, varying carrying capacity etc. (Figures A–H).
 
 ## 🚀 Getting started
@@ -32,7 +33,7 @@ The repository is organized by Figure to facilitate the reproduction of specific
 3. Clone this repository and navigate to the figure of interest.
 4. Follow the folder-specific README to run data-generation scripts and plotting routines.
 
-Simulation outputs are organized in subdirectories to make it easier to re-run parameter sweeps and regenerate published figures. Generated data files already present in the repository can be reused to avoid long runtimes.
+Simulation outputs are organized in subdirectories to make it easier to re-run parameter sweeps and regenerate published figures. For some Figures, generated data files already present in the repository can be reused to avoid long runtimes. 
 
 ## 📚 Reference to MGDrivE (MouseGD)
 
