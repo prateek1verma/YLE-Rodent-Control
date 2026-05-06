@@ -80,7 +80,7 @@ results <- data.frame(
   value = c(
     A_mat,
     A0,
-    f,
+    fec,
     s_low,
     s_K,
     R_m,
