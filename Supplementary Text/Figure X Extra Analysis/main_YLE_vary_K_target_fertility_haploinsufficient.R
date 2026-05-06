@@ -13,7 +13,7 @@ suppressPackageStartupMessages({
 ####################
 # Top-level output
 ####################
-outFolder <- "mgdriveYLE_sweep_5yr_release_target_viablity_byK"
+outFolder <- "mgdriveYLE_sweep_5yr_release_target_fertility_byK"
 if (dir.exists(outFolder)) {
   unlink(outFolder, recursive = TRUE, force = TRUE)
   cat("Folder deleted:", outFolder, "\n")
