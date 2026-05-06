@@ -1,4 +1,4 @@
-# Supplementary Figure F: Fertility-targeting release frequencies
+# Supplementary Figure F: Fertility-targeting release frequencies YLE
 
 Simulations and plots exploring fertility-targeting YLE scenarios with varying release frequencies and fitness costs.
 

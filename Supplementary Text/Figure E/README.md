@@ -1,6 +1,6 @@
 # Supplementary Figure E: fsRDDL/fRIDL comparison
 
-Simulations and plots comparing fsRDDL and fRIDL strategies.
+Simulations and plots comparing fsRDDL strategies.
 
 ## Contents
 - `main_fsRRDL_para_sweep.R` – Executes parameter sweeps.

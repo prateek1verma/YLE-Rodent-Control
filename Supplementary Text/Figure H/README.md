@@ -1,11 +1,9 @@
-# Supplementary Figure H: Suppression efficacy and population peaks as a function of release size comparing SMR, fsRRDL and YLE
-Simulations and plots summarising maximum total population and minimum female population for SMR strategies compared to YLE and fsRRDL.
+# Supplementary Figure H: Dynamics of male YLE carrier frequency for different release sizes; target gene is haplosufficient.
 
 ## Contents
-- `main_SMR_para_sweep.R` - Runs the SMR parameter sweep for higher resolution sweep.
-- `generate_SMR_inheritance_cube.R` - Builds the SMR inheritance cube.
-- `Fig_I.R` - Generates the supplementary figure.
-- `combined_peak_total_min_female_all_strategies.csv` - Summary table used for plotting.
-- `FigI.png` - Rendered supplementary figure.
+- `main_YLE_vary_rel_fy_target_fertility_haplosufficient` - Runs the YLE simulation for HS gene target.
+- `generate_YLE_inheritance_cube.R` - Builds the YLE haplosufficient gene target inheritance cube.
+- `Fig_H.R` - Generates the supplementary figure.
+- `FigH.png` - Rendered supplementary figure.
 
-Run the main script to regenerate simulations for SMR, YLE and fsRRDL repurpose the previous code/data while preparing fig E and fig F.  Execute `Fig_I.R` to rebuild the summary and figure while keeping the data folders for each strategy in the same folder as the R script.
+Run the main script `main_YLE_vary_rel_fy_target_fertility_haplosufficient` to regenerate simulations for the scpecific scenario. Execute `Fig_H.R` to rebuild the figure while keeping the data folders for specefied scenario in the same folder as the R script.

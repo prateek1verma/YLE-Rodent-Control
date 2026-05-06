@@ -5,6 +5,6 @@ Simulations and plots for alternative fertility-targeting YLE parameter sets.
 ## Contents
 - `main_YLE_vary_rel_fy_target_fertility_haploinsufficient.R` – Runs the simulations for this scenario.
 - `generate_YLE_inheritance_cube.R` – Builds the inheritance cube.
-- `FigH_plot.R` – Generates the supplementary figure (output saved as `FigG.png`).
+- `FigG_plot.R` – Generates the supplementary figure (output saved as `FigG.png`).
 
 Run the main script to regenerate simulations, then execute `FigG_plot.R` to rebuild the figure.

@@ -1,6 +1,5 @@
-# Supplementary Figure I: SMR population extrema
-
-Simulations and plots summarising maximum total population and minimum female population for SMR strategies.
+# Supplementary Figure I: Suppression efficacy and population peaks as a function of release size comparing SMR, fsRRDL and YLE
+Simulations and plots summarising maximum total population and minimum female population for SMR strategies compared to YLE and fsRRDL.
 
 ## Contents
 - `main_SMR_para_sweep.R` - Runs the SMR parameter sweep for higher resolution sweep.
