@@ -1,129 +1,88 @@
-generate_fRIDL_inheritance_cube <- function(female_lethality = 1, alleleFitness = NULL) {
-  # female_lethality: 1 = all H-bearing females die (field); 0 = full rescue (lab)
-  if (is.null(alleleFitness)) {
-    alleleFitness <- c(W = 1, H = 1, Y=1, X=1)  # per-allele multiplicative fitness (can customize)
-  }
-  
-  # Genotype sets (diploid locus; sex denoted by prefix mY / fX)
-  alleleSet <- c("W", "H")
+###############################################################################
+# Early-Stage Female-Specific RIDL (fsRIDL) Inheritance Cube Generator
+# Model: Sex-explicit 6-genotype framework (mY... / fX...)
+# Lethality Stage: Embryonic / Egg Stage (via Viability Tensor 'tau')
+###############################################################################
+
+generate_early_fsRIDL_cube <- function(female_lethality = 1.0, alleleFitness = NULL) {
+  # Genotype state space (3 male genotypes, 3 female genotypes)
   male_genotypes   <- c("mYWW", "mYHW", "mYHH")
   female_genotypes <- c("fXWW", "fXHW", "fXHH")
-  genotypes <- c(male_genotypes, female_genotypes)
+  genotypes        <- c(male_genotypes, female_genotypes)
+  nG               <- length(genotypes)
   
-  # --- helpers ---
-  split_geno_to_alleles <- function(geno) {
-    core <- substr(geno, 3, 5)         # e.g., "WW", "HW", "HH"
-    a1 <- substr(core, 1, 1); a2 <- substr(core, 2, 2)
-    if (!(a1 %in% alleleSet && a2 %in% alleleSet)) stop("Invalid genotype: ", geno)
-    c(a1, a2)
-  }
-  get_sex_prefix <- function(geno) {
-    if (startsWith(geno, "mY")) return("mY")
-    if (startsWith(geno, "fX")) return("fX")
-    stop("Genotype must start with 'mY' or 'fX'")
+  # --- Internal Helper Functions ---
+  split_geno <- function(g) {
+    core <- substring(g, 3, 4) # Extract "WW", "HW", or "HH"
+    c(substr(core, 1, 1), substr(core, 2, 2))
   }
   
-  # Mendelian gamete production (no drive/editing)
-  gametes_from_geno <- function(geno) {
-    alleles <- split_geno_to_alleles(geno)
-    if (alleles[1] == alleles[2]) {
-      setNames(1, alleles[1])
-    } else {
-      setNames(c(0.5, 0.5), sort(alleles))
-    }
+  gametes <- function(g) {
+    a <- split_geno(g)
+    if (a[1] == a[2]) setNames(1, a[1]) else setNames(c(0.5, 0.5), sort(a))
   }
   
-  # --- inheritance cube (ih): parents→offspring genotype probabilities ---
-  cube_ih <- array(0, dim = c(length(genotypes), length(genotypes), length(genotypes)),
-                   dimnames = list(genotypes, genotypes, genotypes))
+  # --- 1. Inheritance Tensor (ih): 6 x 6 x 6 ---
+  cube_ih <- array(0, dim = c(nG, nG, nG), dimnames = list(genotypes, genotypes, genotypes))
   
   for (f in female_genotypes) {
-    gf <- gametes_from_geno(f)
+    gf <- gametes(f)
     for (m in male_genotypes) {
-      gm <- gametes_from_geno(m)
-      
-      for (aF in names(gf)) for (aM in names(gm)) {
-        # sons (mY)
-        son <- paste0("mY", paste0(sort(c(aF, aM)), collapse = ""))
-        # daughters (fX)
-        dau <- paste0("fX", paste0(sort(c(aF, aM)), collapse = ""))
-        
-        cube_ih[f, m, son] <- cube_ih[f, m, son] + 0.5 * gf[aF] * gm[aM]
-        cube_ih[f, m, dau] <- cube_ih[f, m, dau] + 0.5 * gf[aF] * gm[aM]
+      gm <- gametes(m)
+      for (aF in names(gf)) {
+        for (aM in names(gm)) {
+          son <- paste0("mY", paste0(sort(c(aF, aM)), collapse = ""))
+          dau <- paste0("fX", paste0(sort(c(aF, aM)), collapse = ""))
+          
+          # Mendelian gametic combination with 1:1 primary sex ratio
+          cube_ih[f, m, son] <- cube_ih[f, m, son] + 0.5 * gf[aF] * gm[aM]
+          cube_ih[f, m, dau] <- cube_ih[f, m, dau] + 0.5 * gf[aF] * gm[aM]
+        }
       }
     }
   }
   
-  # --- viability cube (tau): here genotype-only viability (same for all parent pairs) ---
-  cube_tau <- array(1, dim = c(length(genotypes), length(genotypes), length(genotypes)),
-                    dimnames = list(genotypes, genotypes, genotypes))
+  # --- 2. Viability Mask (tau): Egg-Stage Embryonic Lethality ---
+  cube_tau <- array(1, dim = c(nG, nG, nG), dimnames = list(genotypes, genotypes, genotypes))
   
-  # Female-specific lethality for any H-bearing genotype
-  lethal_genos_f <- c("fXHW", "fXHH")
-  surv_female_H  <- 1 - female_lethality  # 0 in field; 1 in lab
-  for (g in lethal_genos_f) {
-    cube_tau[ , , g] <- surv_female_H
+  # Set egg survival for transgenic females (fXHW and fXHH)
+  surv_female_H <- 1 - female_lethality
+  cube_tau[, , "fXHW"] <- surv_female_H
+  cube_tau[, , "fXHH"] <- surv_female_H
+  
+  # --- 3. Fecundity / Egg Laying Mask (phi) ---
+  phi <- setNames(c(rep(0, 3), rep(1, 3)), genotypes)
+  
+  # --- 4. Adult Fitness / Longevity (omega) ---
+  omega <- setNames(rep(1.0, nG), genotypes)
+  if (!is.null(alleleFitness)) {
+    omega_W <- if (!is.na(alleleFitness["W"])) alleleFitness["W"] else 1.0
+    omega_H <- if (!is.na(alleleFitness["H"])) alleleFitness["H"] else 1.0
+    for (g in genotypes) {
+      alleles <- split_geno(g)
+      omega[g] <- if ("H" %in% alleles) omega_H else omega_W
+    }
   }
   
-  # --- fertility mask (phi): 0 for males, 1 for females (as in your original) ---
-  phi <- c(rep(0, length(male_genotypes)), rep(1, length(female_genotypes)))
-  names(phi) <- genotypes
+  # --- 5. Mating Competitiveness (eta) ---
+  eta <- matrix(1.0, nrow = nG, ncol = nG, dimnames = list(genotypes, genotypes))
   
-  # # --- genotype-level fitness (omega): multiplicative from alleleFitness (optional) ---
-  # calcGenotypeFitness <- function(geno, fitnessVals) {
-  #   alleles <- split_geno_to_alleles(geno)
-  #   prod(fitnessVals[alleles])
-  # }
-  # omega <- setNames(sapply(genotypes, calcGenotypeFitness, fitnessVals = alleleFitness), genotypes)
-  # 
-  # Non-multiplicative genotype fitness:
-  # - WW -> omega_W  (taken from alleleFitness["W"], default 1)
-  # - HW or HH -> omega_H (taken from alleleFitness["H"], default 1)
-  calcGenotypeFitness <- function(geno, fitnessVals) {
-    # defaults if not present
-    omega_W <- if (!is.na(fitnessVals["W"])) fitnessVals["W"] else 1
-    omega_H <- if (!is.na(fitnessVals["H"])) fitnessVals["H"] else omega_W
-    
-    # strip sex prefix ("mY"/"fX"): alleles are the remaining two chars
-    alle <- substring(geno, 3)  # "WW", "HW", or "HH"
-    
-    if (alle == "WW") return(omega_W)
-    if (grepl("H", alle)) return(omega_H)  # applies to HW or HH
-    omega_W
-  }
+  # --- 6. Post-Hatch Survival (xiF, xiM) ---
+  xiF <- setNames(rep(1.0, nG), genotypes)
+  xiM <- setNames(rep(1.0, nG), genotypes)
   
-  # Named vector of genotype fitnesses (ω)
-  omega <- setNames(
-    vapply(genotypes, calcGenotypeFitness, numeric(1), fitnessVals = alleleFitness),
-    genotypes
-  )
-  
-  # --- additional vectors to mirror your structure ---
-  xiF <- setNames(rep(1, length(genotypes)), genotypes)
-  xiM <- setNames(rep(1, length(genotypes)), genotypes)
-  eta <- matrix(1, nrow = length(genotypes), ncol = length(genotypes),
-                dimnames = list(genotypes, genotypes))
-  
-  # Per-genotype survival shortcut (s): mirror tau’s genotype effect for convenience
-  s <- setNames(rep(1, length(genotypes)), genotypes)
-  s[lethal_genos_f] <- surv_female_H
-  
-  list(
-    ih = cube_ih,
-    tau = cube_tau,
+  return(list(
+    ih          = cube_ih,
+    tau         = cube_tau,
     genotypesID = genotypes,
-    genotypesN = length(genotypes),
-    wildType = c("mYWW", "fXWW"),
-    eta = eta,
-    phi = phi,
-    omega = omega,
-    xiF = xiF,
-    xiM = xiM,
-    s = s,
-    releaseType = "mYHH"   # standard f-RIDL release: heterozygous males
-  )
+    genotypesN  = nG,
+    wildType    = "fXWW",   # Scalar string required by MGDrivE internals
+    releaseType = "mYHH",   # Default release genotype (Homozygous Males)
+    eta         = eta,
+    phi         = phi,
+    omega       = omega,
+    xiF         = xiF,
+    xiM         = xiM,
+    s           = setNames(c(1, 1, 1, 1, surv_female_H, surv_female_H), genotypes)
+  ))
 }
-
-# example
-# cube_fRIDL_field <- generate_fRIDL_inheritance_cube(female_lethality = 1)   # field
-cube_fRIDL_lab   <- generate_fRIDL_inheritance_cube(female_lethality = 1, alleleFitness = c(W = 1, H = 0.9, Y=1, X=1))   # tetracycline rescue
